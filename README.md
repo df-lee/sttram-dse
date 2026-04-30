@@ -1,112 +1,106 @@
 # STT-RAM Design Space Exploration
 
-Area-constrained design space exploration of a 16 MB STT-RAM memory using NVSim.
+Area-constrained design space exploration of a **16 MB STT-RAM memory** using **NVSim**.
 
-This project studies how device-level assumptions and memory-organization choices jointly affect area feasibility, latency, energy, and balanced design quality under a hard area constraint.
+This project studies how device-level assumptions and memory-organization choices interact under a hard area budget. The goal is not just to find a fast or low-energy point, but to understand the feasible design region and identify a balanced latency-energy design.
 
-## Project Overview
+## Project Story
 
-STT-RAM is attractive for large on-chip memories because of its density advantage and negligible leakage. However, the final memory-macro quality is not determined by device parameters alone. Organization-level choices such as muxing and mat partitioning also affect peripheral overhead, wiring, validity, latency, and energy.
+STT-RAM is attractive for large on-chip memory because of its high density and negligible leakage. However, memory quality is shaped by both device-side assumptions and architecture-side organization. A smaller memory cell may improve density, but it can also change latency and energy. Similarly, muxing and mat partitioning can shift the tradeoff by changing peripheral overhead and internal access paths.
 
-This project uses NVSim to explore a fixed-capacity 16 MB STT-RAM memory. The workflow first defines a nominal reference point, then screens device- and organization-level parameters, and finally performs a constrained design-space sweep to identify feasible regions and latency-energy tradeoffs.
+This project follows a staged exploration flow:
 
-## Workflow
+1. Define a nominal 16 MB STT-RAM reference in NVSim.
+2. Screen device-level and organization-level parameter groups.
+3. Select the most meaningful parameters for a final constrained sweep.
+4. Filter invalid and over-budget designs.
+5. Analyze latency-energy Pareto tradeoffs and select a balanced design.
+
+## Methodology
 
 ```text
 Nominal 16 MB STT-RAM reference
         ↓
-Device / organization parameter screening
+Sensitivity / impact screening
         ↓
-Selection of CellArea, OutputMux, and MatOrganization
+Select CellArea, OutputMux, and MatOrganization
         ↓
-Constrained design-space sweep
+Constrained parameter sweep
         ↓
 Validity and area-feasibility filtering
         ↓
-Pareto and balanced-design analysis
+Pareto frontier and balanced-design selection
 ```
 
-## Reference Setup
+The nominal reference uses a 16 MB STT-RAM memory macro in NVSim with RAM mode, 128-bit data width, 22 nm HP roadmap, and ReadEDP as the reference optimization target.
 
-| Item | Setting |
-|---|---|
-| Memory target | 16 MB STT-RAM macro |
-| Modeling tool | NVSim |
-| Mode | RAM target |
-| Data width | 128 bits |
-| Process / roadmap | 22 nm HP |
-| Reference objective | ReadEDP |
-| Reference organization | 8×8 banks, 2×2 mats |
-| Subarray size | 1024×512 |
-| Muxing | SenseAmpMux = 16, OutputMux = 1/1 |
-| Area budget | 1.10× nominal reference area = 4.8488 mm² |
+The hard area budget is set to:
 
-## Screening Stage
+$$
+A_{budget} = 1.10 A_0 = 4.8488\ \mathrm{mm}^2
+$$
 
-The first stage screens candidate parameters before the final sweep.
+where \(A_0\) is the nominal reference area.
 
-### Device-side candidates
+## Parameter Screening
 
-| Parameter group | Interpretation |
-|---|---|
-| `CellArea` | STT-RAM cell-area / density assumption |
-| `WriteCurrent` | Reset/set current scaling |
-| `WritePulse` | Reset/set pulse-width scaling |
-| `ResistanceLevel` | On/off resistance scaling |
-| `AccessWidth` | Access transistor width scaling |
+Before the final sweep, the project screens candidate parameters so that the design space is not chosen arbitrarily.
 
-The device-level screening identifies `CellArea` as the leading device-side variable. It mainly controls the area-feasibility envelope, but also produces measurable latency and energy changes.
+**Device-level screening** evaluates grouped STT-RAM cell parameters such as `CellArea`, `WriteCurrent`, `WritePulse`, `ResistanceLevel`, and `AccessWidth`. The result identifies `CellArea` as the leading device-side variable because it strongly affects area feasibility while also changing latency and energy.
 
-### Organization-side candidates
+**Organization-level screening** evaluates architecture parameters such as `OutputMux`, `MatOrganization`, `MuxSenseAmp`, and `Routing`. The result identifies `OutputMux` as the strongest organization-side variable, mainly through its dynamic-energy impact. `MatOrganization` is also retained because it provides a clean array-partitioning interpretation.
 
-| Parameter group | Interpretation |
-|---|---|
-| `OutputMux` | Grouped output-path muxing levels |
-| `MatOrganization` | Mat-level array partitioning |
-| `MuxSenseAmp` | Sense-amplifier muxing |
-| `Routing` | Interconnect style |
+The final sweep therefore focuses on:
 
-The organization-level screening identifies `OutputMux` as the strongest organization-side variable, mainly through dynamic-energy impact. `MatOrganization` is retained as a secondary variable because it provides a clear array-partitioning interpretation.
+- `CellArea`
+- `OutputMux`
+- `MatOrganization`
 
-## Final Sweep Space
+## Final Sweep
 
-| Parameter | Values |
+The final sweep covers 300 attempted design points:
+
+| Parameter | Sweep Range |
 |---|---|
 | `CellArea` scale | 0.2 to 1.3, step 0.1 |
 | `OutputMux` | 1, 2, 4, 8, 16 |
 | `MatOrganization` | 1×1, 2×2, 4×4, 8×8, 16×16 |
 
-## Sweep Summary
+After running NVSim and parsing the outputs:
 
-| Category | Count |
-|---|---:|
-| Attempted design points | 300 |
-| Complete NVSim outputs | 101 |
-| Area-feasible designs | 68 |
-| Pareto-efficient designs | 6 |
+- **101** points produced complete NVSim area-latency-energy outputs.
+- **68** points satisfied the hard area budget.
+- **6** points were Pareto-efficient among the area-feasible designs.
 
-Invalid or incomplete points indicate configurations for which NVSim did not generate complete area, latency, and energy outputs under the forced organization constraints.
+Invalid or incomplete points are treated as outside the usable NVSim design space under the forced organization constraints.
 
-## Evaluation Metrics
+## Latency-Energy Analysis
 
-Average latency and average dynamic energy are defined as:
+Each valid design is compared using average latency and average dynamic energy:
 
-```text
-L_avg = (L_read + L_write) / 2
-E_avg = (E_read + E_write) / 2
-```
+$$
+L_{avg} = \frac{L_r + L_w}{2}
+$$
 
-The balanced design is selected using an equal-weight normalized latency-energy score:
+$$
+E_{avg} = \frac{E_r + E_w}{2}
+$$
 
-```text
-Score_LE = 0.5 × L_avg / L_avg,0 + 0.5 × E_avg / E_avg,0
-```
+To select one representative balanced point from the feasible tradeoff region, the project uses an equal-weight normalized latency-energy score:
 
-This score is used only to select one representative balanced design from the feasible tradeoff region. Pareto-efficient designs define the latency-energy boundary.
+$$
+Score_{LE}
+=
+0.5\frac{L_{avg}}{L_{avg,0}}
++
+0.5\frac{E_{avg}}{E_{avg,0}}
+$$
 
-## Key Results
+Pareto-efficient designs define the latency-energy boundary. The score is used only to pick one balanced representative from that feasible tradeoff region.
 
-### Selected balanced design
+## Selected Balanced Design
+
+The best balanced point is:
 
 | Item | Value |
 |---|---:|
@@ -118,34 +112,35 @@ This score is used only to select one representative balanced design from the fe
 | Average dynamic energy | 182.436 pJ |
 | `Score_LE` | 0.949 |
 
-This design remains below the hard area budget while improving average latency relative to the nominal reference, with only a moderate energy increase.
+Compared with the nominal reference, this design improves average latency while staying well below the area budget, with only a moderate energy increase.
 
-### Pareto-efficient designs
+## Pareto Boundary
 
-| Role | CellArea | OutMux | Mat | Area (mm²) | L_avg (ns) | E_avg (pJ) |
+The Pareto-efficient designs show the latency-energy boundary under the hard area constraint:
+
+| Role | CellArea | OutMux | Mat | Area | L_avg | E_avg |
 |---|---:|---:|---:|---:|---:|---:|
-| Min Latency | 0.2× | 4 | 8×8 | 1.314 | 6.640 | 290.451 |
-| Pareto Point | 0.4× | 2 | 1×1 | 2.687 | 7.229 | 205.831 |
-| Best Balanced | 0.5× | 2 | 4×4 | 2.603 | 7.236 | 182.436 |
-| Pareto Point | 1.0× | 1 | 8×8 | 4.137 | 7.726 | 173.634 |
-| Pareto Point | 0.8× | 1 | 2×2 | 3.693 | 7.796 | 172.244 |
-| Min Energy | 1.0× | 1 | 4×4 | 4.155 | 8.022 | 172.020 |
+| Min latency | 0.2× | 4 | 8×8 | 1.314 mm² | 6.640 ns | 290.451 pJ |
+| Pareto point | 0.4× | 2 | 1×1 | 2.687 mm² | 7.229 ns | 205.831 pJ |
+| Best balanced | 0.5× | 2 | 4×4 | 2.603 mm² | 7.236 ns | 182.436 pJ |
+| Pareto point | 1.0× | 1 | 8×8 | 4.137 mm² | 7.726 ns | 173.634 pJ |
+| Pareto point | 0.8× | 1 | 2×2 | 3.693 mm² | 7.796 ns | 172.244 pJ |
+| Min energy | 1.0× | 1 | 4×4 | 4.155 mm² | 8.022 ns | 172.020 pJ |
 
-## Main Takeaways
+The lowest-latency design uses smaller cells and more aggressive valid organization settings, but its energy cost is much higher. The lowest-energy design stays closer to nominal cell area and uses lower output muxing. The selected balanced point lies between these extremes.
 
-- `CellArea` controls the area-feasibility envelope, but better density does not uniformly improve all metrics.
+## Key Takeaways
+
+- `CellArea` mainly controls the area-feasibility envelope, but smaller cells do not automatically produce the best design.
 - `OutputMux` introduces strong validity and energy effects.
-- `MatOrganization` shifts where the best feasible latency-energy points appear.
-- The best design is determined by device-architecture interaction, not by a single independent knob.
-- The lowest-latency point is not selected as the balanced design because its energy cost is much higher.
+- `MatOrganization` shifts where the best feasible latency-energy region appears.
+- The best design emerges from device-architecture interaction rather than from a single independent knob.
 
-## Repository Contents
+## Report
 
-```text
-.
-├── README.md
-└── sttram-area-constrained-dse-report.pdf
-```
+The full project report is available here:
+
+[`sttram-area-constrained-dse-report.pdf`](./sttram-area-constrained-dse-report.pdf)
 
 ## Tool
 
