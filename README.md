@@ -74,9 +74,3 @@ sttram-area-constrained-dse-report.pdf
 ## Tool
 
 - [NVSim](https://github.com/SEAL-UCSB/NVSim)
-
-## Author
-
-Zefu Li  
-M.S.E. Electrical Engineering  
-University of Pennsylvania
