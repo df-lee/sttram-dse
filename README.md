@@ -89,11 +89,7 @@ $$
 To select one representative balanced point from the feasible tradeoff region, the project uses an equal-weight normalized latency-energy score:
 
 $$
-Score_{LE}
-=
-0.5\frac{L_{avg}}{L_{avg,0}}
-+
-0.5\frac{E_{avg}}{E_{avg,0}}
+Score_{LE} = 0.5\frac{L_{avg}}{L_{avg,0}} + 0.5\frac{E_{avg}}{E_{avg,0}}
 $$
 
 Pareto-efficient designs define the latency-energy boundary. The score is used only to pick one balanced representative from that feasible tradeoff region.
@@ -118,7 +114,7 @@ Compared with the nominal reference, this design improves average latency while 
 
 The Pareto-efficient designs show the latency-energy boundary under the hard area constraint:
 
-| Role | CellArea | OutMux | Mat | Area | L_avg | E_avg |
+| Role | CellArea | OutMux | Mat | Area | L_{avg} | E_{avg} |
 |---|---:|---:|---:|---:|---:|---:|
 | Min latency | 0.2× | 4 | 8×8 | 1.314 mm² | 6.640 ns | 290.451 pJ |
 | Pareto point | 0.4× | 2 | 1×1 | 2.687 mm² | 7.229 ns | 205.831 pJ |
