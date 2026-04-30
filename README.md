@@ -40,7 +40,7 @@ $$
 A_{budget} = 1.10 A_0 = 4.8488\ \mathrm{mm}^2
 $$
 
-where \(A_0\) is the nominal reference area.
+where $$\(A_0\)$$ is the nominal reference area.
 
 ## Parameter Screening
 
