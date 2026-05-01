@@ -195,7 +195,7 @@ The lowest-latency design uses smaller cells and more aggressive valid organizat
 
 The full project report is available here:
 
-[`sttram-area-constrained-dse-report.pdf`](./sttram-area-constrained-dse-report.pdf)
+[`STT_RAM_Area_Constrained_Design_Space_Exploration.pdf`](./STT_RAM_Area_Constrained_Design_Space_Exploration.pdf)
 
 ## Tool
 
